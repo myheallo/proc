@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memento Mori Jídla — HEALLO®</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #FAF7F2;
+      --bg-secondary: #F3EDE4;
+      --text: #2C2520;
+      --text-secondary: #6B5E54;
+      --accent: #C9A96E;
+      --accent-teal: #7BA69E;
+      --accent-berry: #A3647A;
+      --border: rgba(44, 37, 32, 0.1);
+      --dot-empty: rgba(44, 37, 32, 0.08);
+      --dot-past: var(--accent);
+      --dot-today: var(--accent-berry);
+    }
+
+    [data-theme="dark"] {
+      --bg: #1C1917;
+      --bg-secondary: #262220;
+      --text: #F5F0EB;
+      --text-secondary: #A89E95;
+      --border: rgba(245, 240, 235, 0.1);
+      --dot-empty: rgba(245, 240, 235, 0.08);
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    /* Theme toggle */
+    .toggle-bar {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 100;
+    }
+    .toggle-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      transition: all 0.3s;
+    }
+    .toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Layout */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 8rem 0 4rem;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 3.8rem);
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    .hero h1 span {
+      color: var(--accent-berry);
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* Input section */
+    .input-section {
+      text-align: center;
+      padding: 3rem 0;
+    }
+    .input-section label {
+      display: block;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    .date-input-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .date-input-wrapper input {
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      font-size: 1.1rem;
+      padding: 0.8rem 1.2rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    .date-input-wrapper input:focus {
+      border-color: var(--accent);
+    }
+    .btn {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 0.95rem;
+      padding: 0.8rem 1.8rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: all 0.3s;
+    }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    /* Stats */
+    .stats {
+      display: none;
+      padding: 2rem 0 1rem;
+      animation: fadeUp 0.8s ease;
+    }
+    .stats.visible { display: block; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem 1.2rem;
+      text-align: center;
+    }
+    .stat-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 5vw, 2.8rem);
+      font-weight: 600;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .stat-number.past { color: var(--accent); }
+    .stat-number.remaining { color: var(--accent-berry); }
+    .stat-number.total { color: var(--accent-teal); }
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Progress bar */
+    .progress-section {
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+    .progress-bar-track {
+      width: 100%;
+      height: 6px;
+      background: var(--dot-empty);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 0.8rem;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-berry));
+      transition: width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .progress-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    .progress-label strong {
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* Grid */
+    .grid-section {
+      margin-bottom: 3rem;
+    }
+    .grid-section h2 {
+      font-size: 1.6rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    .grid-subtitle {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    .year-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      justify-content: center;
+      padding: 1.5rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .year-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      background: var(--dot-empty);
+      transition: background 0.3s, transform 0.2s;
+      position: relative;
+    }
+    .year-dot.past {
+      background: var(--accent);
+      opacity: 0.7;
+    }
+    .year-dot.current {
+      background: var(--accent-berry);
+      box-shadow: 0 0 8px var(--accent-berry);
+      animation: pulse 2s infinite;
+    }
+    .year-dot:hover {
+      transform: scale(1.8);
+      z-index: 2;
+    }
+    .year-dot:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: var(--bg);
+      font-size: 0.7rem;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+    .legend-dot.past { background: var(--accent); opacity: 0.7; }
+    .legend-dot.current { background: var(--accent-berry); }
+    .legend-dot.future { background: var(--dot-empty); }
+
+    /* Message */
+    .message {
+      text-align: center;
+      padding: 4rem 2rem;
+      margin-bottom: 4rem;
+    }
+    .message blockquote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.4rem, 3.5vw, 2rem);
+      font-style: italic;
+      color: var(--text);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      line-height: 1.5;
+    }
+    .message p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.8;
+    }
+    .positive-note {
+      margin-top: 2.5rem;
+      padding: 1.5rem 2rem;
+      background: var(--bg-secondary);
+      border-left: 3px solid var(--accent-teal);
+      border-radius: 0 8px 8px 0;
+      max-width: 540px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .positive-note p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem 0 3rem;
+      border-top: 1px solid var(--border);
+    }
+    footer a {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 4px var(--accent-berry); }
+      50% { box-shadow: 0 0 12px var(--accent-berry); }
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .hero { padding: 6rem 0 3rem; }
+      .stats-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .date-input-wrapper { flex-direction: column; }
+      .year-dot { width: 7px; height: 7px; }
+      .year-grid { gap: 2px; padding: 1rem; }
+      .legend { gap: 1rem; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toggle-bar">
+    <button class="toggle-btn" id="langToggle" aria-label="Switch language">EN</button>
+    <button class="toggle-btn" id="themeToggle" aria-label="Prepnout motiv">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="container">
+    <section class="hero">
+      <h1>Memento Mori <span data-i18n="heroSpan">Jídla</span></h1>
+      <p data-i18n="heroSub">Kolik jídel tě v životě ještě čeká? Každé z nich si zaslouží tvou pozornost. Ani jedno z nich si nezaslouží tvůj pocit viny.</p>
+    </section>
+
+    <section class="input-section">
+      <label for="birthdate" data-i18n="labelBirth">Kdy ses narodila?</label>
+      <div class="date-input-wrapper">
+        <input type="date" id="birthdate" min="1930-01-01" max="2010-12-31">
+        <button class="btn" id="calculate" data-i18n="btnShow">Ukázat</button>
+      </div>
+    </section>
+
+    <section class="stats" id="statsSection">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number past" id="mealsPast">0</div>
+          <div class="stat-label" data-i18n="labelPast">Snědených jídel</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number remaining" id="mealsRemaining">0</div>
+          <div class="stat-label" data-i18n="labelRemaining">Jídel, co tě ještě čekají</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number total" id="mealsTotal">0</div>
+          <div class="stat-label" data-i18n="labelTotal">Jídel celkem</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <p class="progress-label" id="progressLabel">
+          Prožila jsi <strong id="percentLabel">0 %</strong> svých jídel
+        </p>
+      </div>
+
+      <div class="grid-section">
+        <h2 data-i18n="gridTitle">Tvůj život v jídle</h2>
+        <p class="grid-subtitle" data-i18n="gridSub">Každý čtvereček je jeden rok. Tři jídla denně, den za dnem.</p>
+        <div class="year-grid" id="yearGrid"></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot past"></div> <span data-i18n="legendPast">Prožité roky</span></div>
+          <div class="legend-item"><div class="legend-dot current"></div> <span data-i18n="legendNow">Právě teď</span></div>
+          <div class="legend-item"><div class="legend-dot future"></div> <span data-i18n="legendFuture">Před tebou</span></div>
+        </div>
+      </div>
+
+      <div class="message" id="messageSection">
+        <blockquote id="quoteText"></blockquote>
+        <p id="reflectionText"></p>
+        <div class="positive-note">
+          <p data-i18n="positiveNote">Tohle není odpočítávání. Je to připomínka, že každé jídlo je malý okamžik života, který si zasloužíš prožít s klidem a radostí — ne s pocitem viny.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <a href="https://heallo.cc">HEALLO®</a>
+    </footer>
+  </div>
+
+  <script>
+    // ── Translations ──
+    const i18n = {
+      cs: {
+        heroSpan: 'Jídla',
+        heroSub: 'Kolik jídel tě v životě ještě čeká? Každé z nich si zaslouží tvou pozornost. Ani jedno z nich si nezaslouží tvůj pocit viny.',
+        labelBirth: 'Kdy ses narodila?',
+        btnShow: 'Ukázat',
+        labelPast: 'Snědených jídel',
+        labelRemaining: 'Jídel, co tě ještě čekají',
+        labelTotal: 'Jídel celkem',
+        progressTpl: (pct) => `Prožila jsi <strong>${pct}</strong> svých jídel`,
+        gridTitle: 'Tvůj život v jídle',
+        gridSub: 'Každý čtvereček je jeden rok. Tři jídla denně, den za dnem.',
+        legendPast: 'Prožité roky',
+        legendNow: 'Právě teď',
+        legendFuture: 'Před tebou',
+        positiveNote: 'Tohle není odpočítávání. Je to připomínka, že každé jídlo je malý okamžik života, který si zasloužíš prožít s klidem a radostí — ne s pocitem viny.',
+        tooltipPast: (y, m) => `Rok ${y}: ~${m} jídel`,
+        tooltipCurrent: (y) => `Rok ${y}: tady jsi teď`,
+        tooltipFuture: (y, m) => `Rok ${y}: ~${m} jídel před tebou`,
+        locale: 'cs-CZ',
+        messages: [
+          { quote: 'Většina tvých jídel je ještě před tebou. Jaký vztah k nim chceš mít?', text: 'Máš před sebou tisíce snídaní, obědů a večeří. Každé z nich je příležitost cítit se dobře u jídla, ne proti němu.' },
+          { quote: 'Jsi zhruba v polovině. Od teď může být každé jídlo klidnější.', text: 'Některá jídla jsme snědly ve spěchu, jiná s pocitem viny. Ale ta nejlepší jídla nemusí být za námi. Mohou začít zítra u snídaně.' },
+          { quote: 'Čím víc jídel máš za sebou, tím líp víš, co ti opravdu chutná.', text: 'Roky zkušeností u stolu jsou tvá superschopnost. Víš, co ti dělá dobře. Teď je čas si to dovolit bez výčitek.' },
+          { quote: 'Nejcennější jídla nejsou ta první. Jsou ta, u kterých jsi opravdu přítomná.', text: 'Každé jídlo, které si vychutnáš s klidem a radostí, má větší hodnotu než tisíc jídel snědených ve spěchu. A těch krásných jídel máš před sebou pořád dost.' }
+        ]
+      },
+      en: {
+        heroSpan: 'of Meals',
+        heroSub: 'How many meals do you still have ahead of you? Each one deserves your full presence. Not a single one deserves your guilt.',
+        labelBirth: 'When were you born?',
+        btnShow: 'Show me',
+        labelPast: 'Meals eaten',
+        labelRemaining: 'Meals still ahead',
+        labelTotal: 'Meals in a lifetime',
+        progressTpl: (pct) => `You have lived <strong>${pct}</strong> of your meals`,
+        gridTitle: 'Your life in meals',
+        gridSub: 'Each square is one year. Three meals a day, day after day.',
+        legendPast: 'Years lived',
+        legendNow: 'Right now',
+        legendFuture: 'Ahead of you',
+        positiveNote: 'This is not a countdown. It is a reminder that every meal is a small moment of life you deserve to experience with calm and joy — not with guilt.',
+        tooltipPast: (y, m) => `Year ${y}: ~${m} meals`,
+        tooltipCurrent: (y) => `Year ${y}: you are here`,
+        tooltipFuture: (y, m) => `Year ${y}: ~${m} meals ahead`,
+        locale: 'en-US',
+        messages: [
+          { quote: 'Most of your meals are still ahead of you. What kind of relationship do you want with them?', text: 'You have thousands of breakfasts, lunches, and dinners before you. Each one is an opportunity to feel good about food, not against it.' },
+          { quote: 'You are roughly halfway. From now on, every meal can be calmer.', text: 'Some meals we ate in a rush, others with guilt. But the best meals don\'t have to be behind us. They can start tomorrow at breakfast.' },
+          { quote: 'The more meals you have behind you, the better you know what truly nourishes you.', text: 'Years of experience at the table are your superpower. You know what feels good. Now it is time to allow yourself that without guilt.' },
+          { quote: 'The most precious meals are not the first ones. They are the ones where you are truly present.', text: 'Every meal you savour with calm and joy is worth more than a thousand meals eaten in a rush. And you still have plenty of beautiful meals ahead.' }
+        ]
+      }
+    };
+
+    // ── State ──
+    let lang = localStorage.getItem('heallo-lang') || 'cs';
+    let lastPercent = null;
+
+    // ── Theme ──
+    const themeToggle = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('heallo-theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('heallo-theme', next);
+    });
+
+    // ── Language ──
+    const langToggle = document.getElementById('langToggle');
+
+    function applyLang() {
+      const t = i18n[lang];
+      document.documentElement.setAttribute('lang', lang);
+      document.title = lang === 'cs' ? 'Memento Mori Jídla — HEALLO®' : 'Memento Mori of Meals — HEALLO®';
+      langToggle.textContent = lang === 'cs' ? 'EN' : 'CZ';
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
+      });
+
+      // Progress label (if stats visible)
+      const pctEl = document.getElementById('percentLabel');
+      if (lastPercent !== null) {
+        document.getElementById('progressLabel').innerHTML = t.progressTpl(lastPercent);
+      }
+
+      // Re-render grid tooltips + message if stats are shown
+      if (document.getElementById('statsSection').classList.contains('visible')) {
+        rebuildGrid();
+        updateMessage();
+      }
+    }
+
+    langToggle.addEventListener('click', () => {
+      lang = lang === 'cs' ? 'en' : 'cs';
+      localStorage.setItem('heallo-lang', lang);
+      applyLang();
+    });
+
+    // ── Constants ──
+    const MEALS_PER_DAY = 3;
+    const LIFE_EXPECTANCY = 85;
+    const MEALS_PER_YEAR = Math.round(MEALS_PER_DAY * 365.25);
+
+    // ── Animate counting ──
+    function animateNumber(el, target, duration = 1200) {
+      const start = 0;
+      const startTime = performance.now();
+      const loc = i18n[lang].locale;
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + (target - start) * eased);
+        el.textContent = current.toLocaleString(loc);
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    // ── Messages ──
+    function getMessage(percentUsed) {
+      const msgs = i18n[lang].messages;
+      if (percentUsed < 30) return msgs[0];
+      if (percentUsed < 55) return msgs[1];
+      if (percentUsed < 75) return msgs[2];
+      return msgs[3];
+    }
+
+    function updateMessage() {
+      if (lastPercent === null) return;
+      const msg = getMessage(lastPercent);
+      document.getElementById('quoteText').textContent = msg.quote;
+      document.getElementById('reflectionText').textContent = msg.text;
+    }
+
+    // ── Grid ──
+    let cachedAge = null;
+
+    function rebuildGrid() {
+      if (cachedAge === null) return;
+      const t = i18n[lang];
+      const grid = document.getElementById('yearGrid');
+      grid.innerHTML = '';
+      const currentYear = Math.floor(cachedAge);
+      const mealsFormatted = MEALS_PER_YEAR.toLocaleString(t.locale);
+
+      for (let y = 0; y < LIFE_EXPECTANCY; y++) {
+        const dot = document.createElement('div');
+        dot.className = 'year-dot';
+        if (y < currentYear) {
+          dot.classList.add('past');
+          dot.setAttribute('data-tooltip', t.tooltipPast(y + 1, mealsFormatted));
+        } else if (y === currentYear) {
+          dot.classList.add('current');
+          dot.setAttribute('data-tooltip', t.tooltipCurrent(y + 1));
+        } else {
+          dot.setAttribute('data-tooltip', t.tooltipFuture(y + 1, mealsFormatted));
+        }
+        grid.appendChild(dot);
+      }
+    }
+
+    // ── Calculate ──
+    document.getElementById('calculate').addEventListener('click', () => {
+      const input = document.getElementById('birthdate').value;
+      if (!input) return;
+
+      const birthDate = new Date(input);
+      const now = new Date();
+      const ageDays = (now - birthDate) / (1000 * 60 * 60 * 24);
+      const ageYears = ageDays / 365.25;
+
+      if (ageYears < 0 || ageYears > 120) return;
+
+      cachedAge = ageYears;
+      const totalMeals = LIFE_EXPECTANCY * MEALS_PER_YEAR;
+      const mealsPast = Math.round(ageDays * MEALS_PER_DAY);
+      const mealsRemaining = Math.max(0, totalMeals - mealsPast);
+      const percentUsed = Math.min((mealsPast / totalMeals) * 100, 100);
+      lastPercent = percentUsed.toFixed(1) + ' %';
+
+      const section = document.getElementById('statsSection');
+      section.classList.add('visible');
+
+      animateNumber(document.getElementById('mealsPast'), mealsPast);
+      animateNumber(document.getElementById('mealsRemaining'), mealsRemaining);
+      animateNumber(document.getElementById('mealsTotal'), totalMeals);
+
+      setTimeout(() => {
+        document.getElementById('progressFill').style.width = percentUsed + '%';
+      }, 200);
+
+      document.getElementById('progressLabel').innerHTML = i18n[lang].progressTpl(lastPercent);
+
+      rebuildGrid();
+      updateMessage();
+
+      setTimeout(() => {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    });
+
+    // ── Init ──
+    applyLang();
+  </script>
+</body>
+</html>
